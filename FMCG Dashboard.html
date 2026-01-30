@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMCG Sales Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a3a8f 0%, #2d5cc2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.4rem;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 25px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eef1f7;
+            padding-bottom: 12px;
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1a3a8f;
+        }
+        
+        .card-icon {
+            background-color: #eef4ff;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2d5cc2;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+        
+        /* Specific card sizing */
+        .region-sales {
+            grid-column: span 6;
+        }
+        
+        .sales-target {
+            grid-column: span 6;
+        }
+        
+        .top-distributors {
+            grid-column: span 4;
+        }
+        
+        .sku-sales {
+            grid-column: span 4;
+        }
+        
+        .inactive-distributor {
+            grid-column: span 4;
+        }
+        
+        .region-gap {
+            grid-column: span 12;
+        }
+        
+        /* KPI Styling */
+        .kpi-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .kpi-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8fafd;
+            min-width: 120px;
+            margin: 5px;
+        }
+        
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a3a8f;
+        }
+        
+        .kpi-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Table Styling */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th {
+            background-color: #f8fafd;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #1a3a8f;
+            border-bottom: 2px solid #eef1f7;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eef1f7;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f8fafd;
+        }
+        
+        /* Performance indicator */
+        .performance-indicator {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .positive {
+            background-color: #e7f7ef;
+            color: #0a8f4e;
+        }
+        
+        .negative {
+            background-color: #fde8e8;
+            color: #e63946;
+        }
+        
+        .warning {
+            background-color: #fff4e6;
+            color: #ff9800;
+        }
+        
+        .highlight-box {
+            background-color: #f8fafd;
+            border-left: 4px solid #2d5cc2;
+            padding: 18px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+        }
+        
+        .highlight-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a3a8f;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eef1f7;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .region-sales, .sales-target, .top-distributors, .sku-sales, .inactive-distributor {
+                grid-column: span 12;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FMCG Sales Performance Dashboard</h1>
+            <p class="subtitle">January 2025 Sales Analysis & Regional Performance</p>
+        </header>
+        
+        <div class="dashboard-grid">
+            <!-- Total Sales by Region -->
+            <div class="card region-sales">
+                <div class="card-header">
+                    <h2 class="card-title">Total Sales by Region</h2>
+                    <div class="card-icon">📊</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="regionSalesChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Sales vs Target % -->
+            <div class="card sales-target">
+                <div class="card-header">
+                    <h2 class="card-title">Sales vs Target %</h2>
+                    <div class="card-icon">🎯</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="targetChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Top Performing Distributors -->
+            <div class="card top-distributors">
+                <div class="card-header">
+                    <h2 class="card-title">Top Performing Distributors</h2>
+                    <div class="card-icon">🏆</div>
+                </div>
+                <div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Distributor</th>
+                                <th>Sales (PKR)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topDistributorsTable">
+                            <!-- Table content will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- SKU-wise Sales Contribution -->
+            <div class="card sku-sales">
+                <div class="card-header">
+                    <h2 class="card-title">SKU-wise Sales Contribution</h2>
+                    <div class="card-icon">🥤</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="skuChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Impact of Inactive Distributor (D004) -->
+            <div class="card inactive-distributor">
+                <div class="card-header">
+                    <h2 class="card-title">Impact of Inactive Distributor</h2>
+                    <div class="card-icon">⚠️</div>
+                </div>
+                <div class="kpi-container">
+                    <div class="kpi-item">
+                        <div class="kpi-value">D004</div>
+                        <div class="kpi-label">Distributor ID</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value">18,000</div>
+                        <div class="kpi-label">Lost Sales (PKR)</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value">1.0%</div>
+                        <div class="kpi-label">of Total Sales</div>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <div class="highlight-title">Malik Enterprises (Multan)</div>
+                    <p>This distributor is marked as <span class="performance-indicator negative">Inactive</span> but had one transaction in January 2025 (SO1004). Reactivating this distributor could potentially recover lost sales in the South region.</p>
+                </div>
+            </div>
+            
+            <!-- Central vs South performance gap -->
+            <div class="card region-gap">
+                <div class="card-header">
+                    <h2 class="card-title">Central vs South Performance Gap Analysis</h2>
+                    <div class="card-icon">📈</div>
+                </div>
+                <div class="kpi-container">
+                    <div class="kpi-item">
+                        <div class="kpi-value">144,400</div>
+                        <div class="kpi-label">Central Sales (PKR)</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value">60,600</div>
+                        <div class="kpi-label">South Sales (PKR)</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value">83,800</div>
+                        <div class="kpi-label">Sales Gap (PKR)</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value">5.8%</div>
+                        <div class="kpi-label">Central Target %</div>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-value">5.1%</div>
+                        <div class="kpi-label">South Target %</div>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <div class="highlight-title">Performance Insight</div>
+                    <p>The Central region is significantly outperforming the South region with <span class="performance-indicator positive">138% higher sales</span>. However, both regions are far from their monthly targets (Central: 5.8%, South: 5.1%). The South region has only 2 active distributors compared to Central's 3, and one of them (D004) is inactive.</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>FMCG Sales Dashboard • Data Source: distributors.xlsx, products.xlsx, sales_orders.xlsx, targets.xlsx</p>
+            <p>Last Updated: January 2025 • All values in Pakistani Rupees (PKR)</p>
+        </footer>
+    </div>
+
+    <script>
+        // Data extracted from the provided Excel files
+        const salesData = {
+            regions: {
+                'Central': 144400,
+                'North': 46500,
+                'South': 60600
+            },
+            targets: {
+                'Central': 2500000,
+                'North': 1800000,
+                'South': 1200000
+            },
+            distributors: [
+                { id: 'D001', name: 'Al-Fatah Distributors', region: 'Central', sales: 66800, status: 'Active' },
+                { id: 'D002', name: 'Rehman Traders', region: 'Central', sales: 49200, status: 'Active' },
+                { id: 'D003', name: 'Khan Distributors', region: 'North', sales: 46500, status: 'Active' },
+                { id: 'D005', name: 'Usman & Co', region: 'South', sales: 42600, status: 'Active' },
+                { id: 'D006', name: 'City Cash & Carry', region: 'Central', sales: 14400, status: 'Active' },
+                { id: 'D004', name: 'Malik Enterprises', region: 'South', sales: 18000, status: 'Inactive' }
+            ],
+            skus: [
+                { id: 'P001', name: 'Cola Drink', sales: 82500 },
+                { id: 'P002', name: 'Orange Drink', sales: 56000 },
+                { id: 'P003', name: 'Lemon Soda', sales: 42000 },
+                { id: 'P004', name: 'Energy Drink', sales: 27000 },
+                { id: 'P005', name: 'Mineral Water', sales: 30000 }
+            ]
+        };
+
+        // Calculate target achievement percentages
+        const targetPercentages = {
+            'Central': ((salesData.regions['Central'] / salesData.targets['Central']) * 100).toFixed(2),
+            'North': ((salesData.regions['North'] / salesData.targets['North']) * 100).toFixed(2),
+            'South': ((salesData.regions['South'] / salesData.targets['South']) * 100).toFixed(2)
+        };
+
+        // 1. Total Sales by Region Chart
+        const regionCtx = document.getElementById('regionSalesChart').getContext('2d');
+        const regionSalesChart = new Chart(regionCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(salesData.regions),
+                datasets: [{
+                    label: 'Total Sales (PKR)',
+                    data: Object.values(salesData.regions),
+                    backgroundColor: [
+                        'rgba(41, 128, 185, 0.7)',
+                        'rgba(52, 152, 219, 0.7)',
+                        'rgba(26, 188, 156, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgb(41, 128, 185)',
+                        'rgb(52, 152, 219)',
+                        'rgb(26, 188, 156)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Sales: PKR ${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'PKR ' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Sales vs Target % Chart
+        const targetCtx = document.getElementById('targetChart').getContext('2d');
+        const targetChart = new Chart(targetCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(targetPercentages),
+                datasets: [{
+                    label: 'Target Achievement %',
+                    data: Object.values(targetPercentages),
+                    backgroundColor: [
+                        targetPercentages['Central'] > 5 ? 'rgba(46, 204, 113, 0.7)' : 'rgba(231, 76, 60, 0.7)',
+                        targetPercentages['North'] > 2.5 ? 'rgba(46, 204, 113, 0.7)' : 'rgba(231, 76, 60, 0.7)',
+                        targetPercentages['South'] > 5 ? 'rgba(46, 204, 113, 0.7)' : 'rgba(231, 76, 60, 0.7)'
+                    ],
+                    borderColor: [
+                        targetPercentages['Central'] > 5 ? 'rgb(39, 174, 96)' : 'rgb(192, 57, 43)',
+                        targetPercentages['North'] > 2.5 ? 'rgb(39, 174, 96)' : 'rgb(192, 57, 43)',
+                        targetPercentages['South'] > 5 ? 'rgb(39, 174, 96)' : 'rgb(192, 57, 43)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Achievement: ${context.raw}% of target`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Populate Top Distributors Table
+        const topDistributorsTable = document.getElementById('topDistributorsTable');
+        // Sort distributors by sales (descending)
+        const sortedDistributors = salesData.distributors.sort((a, b) => b.sales - a.sales);
+        
+        sortedDistributors.forEach(distributor => {
+            const row = document.createElement('tr');
+            
+            // Status indicator
+            let statusClass = 'positive';
+            if (distributor.status === 'Inactive') statusClass = 'negative';
+            
+            row.innerHTML = `
+                <td><strong>${distributor.id}</strong><br>${distributor.name}</td>
+                <td>PKR ${distributor.sales.toLocaleString()}</td>
+                <td><span class="performance-indicator ${statusClass}">${distributor.status}</span></td>
+            `;
+            
+            topDistributorsTable.appendChild(row);
+        });
+
+        // 4. SKU-wise Sales Contribution Chart
+        const skuCtx = document.getElementById('skuChart').getContext('2d');
+        const skuChart = new Chart(skuCtx, {
+            type: 'doughnut',
+            data: {
+                labels: salesData.skus.map(sku => sku.name),
+                datasets: [{
+                    label: 'Sales Contribution',
+                    data: salesData.skus.map(sku => sku.sales),
+                    backgroundColor: [
+                        'rgba(231, 76, 60, 0.7)',
+                        'rgba(241, 196, 15, 0.7)',
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(52, 152, 219, 0.7)',
+                        'rgba(155, 89, 182, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgb(192, 57, 43)',
+                        'rgb(243, 156, 18)',
+                        'rgb(39, 174, 96)',
+                        'rgb(41, 128, 185)',
+                        'rgb(142, 68, 173)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = salesData.skus.reduce((sum, sku) => sum + sku.sales, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return `${context.label}: PKR ${context.raw.toLocaleString()} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
