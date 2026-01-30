@@ -1,4 +1,4 @@
-# fmcg-sales-distribution-analytics
+# Fmcg-sales-distribution-analytics
 ERP-inspired FMCG Sales &amp; Distribution analytics dashboard showcasing KPIs, distributor performance, targets, and business insights using simulated enterprise data.
 
 FMCG Sales & Distribution Analytics Dashboard
